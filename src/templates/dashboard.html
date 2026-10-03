@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Verify 2FA | SecureVault{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <div class="card p-4">
+            <h3 class="mb-3">Verify Authentication Code</h3>
+            <form method="post">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.otp.label(class_='form-label') }}
+                    {{ form.otp(class_='form-control', placeholder='123456') }}
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Verify</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Setup 2FA | SecureVault{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card p-4">
+            <h2 class="mb-3">Two-Factor Authentication</h2>
+            <p>Scan the QR code using your authenticator app, then verify the generated code.</p>
+            <div class="text-center mb-3">
+                <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="img-fluid" style="max-width:240px;">
+            </div>
+            <p class="text-break"><strong>Manual setup key:</strong> {{ otp_uri }}</p>
+            <a href="{{ url_for('auth.verify_2fa') }}" class="btn btn-primary">Verify code</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

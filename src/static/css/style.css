@@ -1,0 +1,76 @@
+from __future__ import annotations
+
+from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
+
+from src.config import Config
+from src.extensions import db
+from src.models import VaultEntry
+from src.security.audit import log_security_event
+from src.vault.crypto import decrypt_secret, encrypt_secret
+
+
+vault_bp = Blueprint("vault", __name__)
+
+
+@vault_bp.route("/", methods=["GET", "POST"])
+@login_required
+def vault_index():
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        url = request.form.get("url", "").strip()
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        notes = request.form.get("notes", "").strip()
+
+        if not title or not password:
+            flash("Title and password are required.")
+            return render_template("vault.html", entries=VaultEntry.query.filter_by(user_id=current_user.id).all())
+
+        encrypted = encrypt_secret(password, Config.AES_KEY)
+        entry = VaultEntry(
+            user_id=current_user.id,
+            title=title,
+            url=url,
+            username=username,
+            password_ciphertext=encrypted["ciphertext"],
+            password_nonce=encrypted["nonce"],
+            notes=notes,
+        )
+        db.session.add(entry)
+        db.session.commit()
+        log_security_event(current_user.id, "vault_entry_creation", f"vault_entry_created:{title}", request)
+        flash("Vault entry added securely.")
+        return redirect(url_for("vault.vault_index"))
+
+    entries = VaultEntry.query.filter_by(user_id=current_user.id).order_by(VaultEntry.created_at.desc()).all()
+    return render_template("vault.html", entries=entries)
+
+
+@vault_bp.route("/delete/<int:entry_id>", methods=["POST"])
+@login_required
+def delete_entry(entry_id):
+    entry = VaultEntry.query.get_or_404(entry_id)
+    if entry.user_id != current_user.id:
+        log_security_event(current_user.id, "unauthorized_access", f"attempted_vault_delete:{entry_id}", request)
+        flash("You are not authorized to modify this vault item.")
+        return redirect(url_for("vault.vault_index"))
+
+    db.session.delete(entry)
+    db.session.commit()
+    log_security_event(current_user.id, "vault_entry_deletion", f"vault_entry_deleted:{entry_id}", request)
+    flash("Vault item deleted.")
+    return redirect(url_for("vault.vault_index"))
+
+
+@vault_bp.route("/decrypt/<int:entry_id>")
+@login_required
+def decrypt_entry(entry_id):
+    entry = VaultEntry.query.get_or_404(entry_id)
+    if entry.user_id != current_user.id:
+        log_security_event(current_user.id, "unauthorized_access", f"attempted_vault_view:{entry_id}", request)
+        flash("You are not authorized to view this vault item.")
+        return redirect(url_for("vault.vault_index"))
+
+    plaintext = decrypt_secret(entry.password_ciphertext, entry.password_nonce, Config.AES_KEY)
+    return render_template("vault.html", entries=VaultEntry.query.filter_by(user_id=current_user.id).all(), decrypted_value=plaintext, selected_entry=entry)

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard | SecureVault{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <h5>Welcome</h5>
+            <p class="lead mb-0">{{ user.username }}</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <h5>Security Status</h5>
+            <p class="mb-0">2FA enabled: {% if user.totp_secret %}Yes{% else %}No{% endif %}</p>
+            <p class="mb-0">Role: {{ user.role }}</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 h-100">
+            <h5>Quick Actions</h5>
+            <a href="{{ url_for('vault.vault_index') }}" class="btn btn-primary d-block mb-2">View Vault</a>
+            <a href="{{ url_for('password_generator_page') }}" class="btn btn-outline-primary d-block mb-2">Generate Password</a>
+            <a href="{{ url_for('auth.setup_2fa') }}" class="btn btn-outline-secondary d-block">Set Up 2FA</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

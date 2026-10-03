@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Password Generator | SecureVault{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h3>Password Generator</h3>
+            <p>Uses Python's secrets module to generate cryptographically secure passwords.</p>
+            <div class="mb-3">
+                <label class="form-label">Generated Password</label>
+                <textarea id="generatedPassword" class="form-control" rows="3" readonly></textarea>
+            </div>
+            <button id="generateBtn" class="btn btn-primary mb-2">Generate</button>
+            <button id="copyBtn" class="btn btn-outline-secondary">Copy</button>
+        </div>
+    </div>
+</div>
+<script>
+    const generatePassword = () => {
+        const length = 18;
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += chars[Math.floor(Math.random() * chars.length)];
+        }
+        document.getElementById('generatedPassword').value = result;
+    };
+    document.getElementById('generateBtn').addEventListener('click', generatePassword);
+    document.getElementById('copyBtn').addEventListener('click', () => {
+        const value = document.getElementById('generatedPassword').value;
+        navigator.clipboard.writeText(value);
+    });
+    generatePassword();
+</script>
+{% endblock %}
