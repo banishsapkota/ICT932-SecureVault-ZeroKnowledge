@@ -12,7 +12,7 @@ The application provides:
 - TOTP-based 2FA
 - role-based access control
 - secure session timeout
-- password generation and strength analysis
+- browser-side cryptographic password generation and minimum passphrase length checks
 - encrypted vault storage using AES-256-GCM
 - audit logging for security events
 - CI/CD and security testing automation
@@ -65,6 +65,10 @@ This project stores only ciphertext and metadata in the database. The server is 
 - .github/workflows/ – GitHub Actions pipeline
 - scripts/ – database initialization scripts
 
+## Implemented MVP
+
+See [MVP operations and threat model](docs/MVP.md) for the implemented flows, security boundaries, testing, and database compatibility. Python 3.14 and Node 24 are the validated runtimes. Use a separate master passphrase: it is never sent to the server. Labels, usernames, and passwords are encrypted in the browser. No server-side AES vault key is used.
+
 ## Installation
 
 1. Clone the repository
@@ -75,10 +79,12 @@ This project stores only ciphertext and metadata in the database. The server is 
 6. Run the app
 
 ```bash
-python -m venv .venv
+python3.14 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
+# Generate a secret and paste it into SECRET_KEY in .env:
+python -c "import secrets; print(secrets.token_hex(32))"
 python scripts/init_db.py
 python src/app.py
 ```
@@ -90,9 +96,8 @@ The project uses environment variables defined in `.env`.
 Example:
 
 ```env
-SECRET_KEY=your-strong-secret-key
+SECRET_KEY=PASTE_A_RANDOM_64_CHARACTER_HEX_VALUE
 DATABASE_URL=sqlite:///securevault.db
-AES_KEY=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
 SESSION_COOKIE_SECURE=False
 APP_ENV=development
 ```
@@ -108,8 +113,7 @@ python scripts/init_db.py
 ## Running Instructions
 
 ```bash
-export PYTHONPATH=src
-flask --app src.app run --debug
+python -m flask --app src.app run
 ```
 
 Or directly:

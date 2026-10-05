@@ -1,3 +1,1 @@
-from .routes import auth_bp
-
-__all__ = ["auth_bp"]
+"""SecureVault module. Vault cryptography runs exclusively in the browser."""

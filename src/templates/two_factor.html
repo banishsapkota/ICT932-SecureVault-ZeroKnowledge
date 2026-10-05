@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="card">
+    <h2>Two-factor authentication</h2>
+    {% if qr %}
+    <p>Scan this code in your authenticator, then enter a code to finish setup.</p>
+    <img src="data:image/png;base64,{{ qr }}" alt="Authenticator setup QR code" width="240">
+    <p>Manual setup key: <code>{{ secret }}</code></p>
+    {% endif %}
+
+    <p>
+        Enter the six-digit code from your
+        authenticator application.
+    </p>
+
+    <form method="post">
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}"
+        >
+
+        <label>
+            TOTP code
+            <input
+                name="token"
+                maxlength="6"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                required
+            >
+        </label>
+
+        <button type="submit">
+            Verify
+        </button>
+    </form>
+</section>
+
+{% endblock %}

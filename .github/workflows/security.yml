@@ -1,0 +1,33 @@
+name: SecureVault Security Pipeline
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m compileall -q src scripts
+      - run: ruff check src tests scripts
+      - run: python -m pytest -q --cov=src --cov-fail-under=85
+      - run: node --test tests/vault_crypto.test.cjs
+      - run: bandit -r src
+      - run: pip-audit -r requirements.txt
+      - name: Startup validation
+        env:
+          SECRET_KEY: ci-ephemeral-startup-key-not-used-in-deployment
+          DATABASE_URL: sqlite:///:memory:
+        run: python -m flask --app src.app init-db
+      - name: Secret scanning
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
