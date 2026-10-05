@@ -1,19 +1,76 @@
-{% extends 'base.html' %}
-{% block title %}Verify 2FA | SecureVault{% endblock %}
+{% extends "base.html" %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-4">
-        <div class="card p-4">
-            <h3 class="mb-3">Verify Authentication Code</h3>
-            <form method="post">
-                {{ form.hidden_tag() }}
-                <div class="mb-3">
-                    {{ form.otp.label(class_='form-label') }}
-                    {{ form.otp(class_='form-control', placeholder='123456') }}
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Verify</button>
-            </form>
-        </div>
-    </div>
-</div>
+
+<p id="status" role="status"></p>
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<section class="card">
+    <h2>Encrypted Vault</h2>
+
+    <p>
+        Use a separate master passphrase (at least 12 characters). There is no recovery if you forget it. Vault encryption and decryption occur
+        in your browser.
+    </p>
+
+    <label>
+        Vault master password
+        <input
+            type="password"
+            id="masterPassword"
+            autocomplete="off"
+        >
+    </label>
+
+    <button id="unlockButton">
+        Unlock Vault
+    </button>
+
+    <button id="lockButton">
+        Lock
+    </button>
+</section>
+
+<section
+    id="vaultArea"
+    class="card hidden"
+>
+    <h3>Add credential</h3>
+
+    <label>
+        Label
+        <input id="entryLabel">
+    </label>
+
+    <label>
+        Username / Email
+        <input id="entryUsername">
+    </label>
+
+    <label>
+        Password
+        <input
+            type="password"
+            id="entryPassword"
+        >
+    </label>
+
+    <button id="generateButton">
+        Generate Strong Password
+    </button>
+
+    <button id="saveButton">
+        Encrypt & Save
+    </button>
+
+    <h3>Vault Entries</h3>
+
+    <div id="entryList"></div>
+</section>
+
+
+
+<script
+    src="{{ url_for('static', filename='js/vault.js') }}"
+></script>
+
 {% endblock %}

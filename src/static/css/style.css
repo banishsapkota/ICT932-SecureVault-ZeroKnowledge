@@ -1,76 +1,113 @@
-from __future__ import annotations
+:root {
+    font-family:
+        Inter,
+        Arial,
+        sans-serif;
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_required
+    color: #172033;
+    background: #f3f6fb;
+}
 
-from src.config import Config
-from src.extensions import db
-from src.models import VaultEntry
-from src.security.audit import log_security_event
-from src.vault.crypto import decrypt_secret, encrypt_secret
+body {
+    margin: 0;
+}
 
+header {
+    background: #172554;
+    color: white;
+    padding: 1rem 2rem;
 
-vault_bp = Blueprint("vault", __name__)
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
+header a {
+    color: white;
+    margin-right: 1rem;
+}
 
-@vault_bp.route("/", methods=["GET", "POST"])
-@login_required
-def vault_index():
-    if request.method == "POST":
-        title = request.form.get("title", "").strip()
-        url = request.form.get("url", "").strip()
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "").strip()
-        notes = request.form.get("notes", "").strip()
+main {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
 
-        if not title or not password:
-            flash("Title and password are required.")
-            return render_template("vault.html", entries=VaultEntry.query.filter_by(user_id=current_user.id).all())
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
 
-        encrypted = encrypt_secret(password, Config.AES_KEY)
-        entry = VaultEntry(
-            user_id=current_user.id,
-            title=title,
-            url=url,
-            username=username,
-            password_ciphertext=encrypted["ciphertext"],
-            password_nonce=encrypted["nonce"],
-            notes=notes,
-        )
-        db.session.add(entry)
-        db.session.commit()
-        log_security_event(current_user.id, "vault_entry_creation", f"vault_entry_created:{title}", request)
-        flash("Vault entry added securely.")
-        return redirect(url_for("vault.vault_index"))
+    box-shadow:
+        0 6px 20px
+        rgba(0, 0, 0, 0.08);
+}
 
-    entries = VaultEntry.query.filter_by(user_id=current_user.id).order_by(VaultEntry.created_at.desc()).all()
-    return render_template("vault.html", entries=entries)
+label {
+    display: block;
+    margin-bottom: 1rem;
+}
 
+input {
+    width: 100%;
+    box-sizing: border-box;
 
-@vault_bp.route("/delete/<int:entry_id>", methods=["POST"])
-@login_required
-def delete_entry(entry_id):
-    entry = VaultEntry.query.get_or_404(entry_id)
-    if entry.user_id != current_user.id:
-        log_security_event(current_user.id, "unauthorized_access", f"attempted_vault_delete:{entry_id}", request)
-        flash("You are not authorized to modify this vault item.")
-        return redirect(url_for("vault.vault_index"))
+    margin-top: 0.35rem;
+    padding: 0.75rem;
 
-    db.session.delete(entry)
-    db.session.commit()
-    log_security_event(current_user.id, "vault_entry_deletion", f"vault_entry_deleted:{entry_id}", request)
-    flash("Vault item deleted.")
-    return redirect(url_for("vault.vault_index"))
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
 
+button {
+    background: #2563eb;
+    color: white;
 
-@vault_bp.route("/decrypt/<int:entry_id>")
-@login_required
-def decrypt_entry(entry_id):
-    entry = VaultEntry.query.get_or_404(entry_id)
-    if entry.user_id != current_user.id:
-        log_security_event(current_user.id, "unauthorized_access", f"attempted_vault_view:{entry_id}", request)
-        flash("You are not authorized to view this vault item.")
-        return redirect(url_for("vault.vault_index"))
+    border: 0;
+    border-radius: 8px;
 
-    plaintext = decrypt_secret(entry.password_ciphertext, entry.password_nonce, Config.AES_KEY)
-    return render_template("vault.html", entries=VaultEntry.query.filter_by(user_id=current_user.id).all(), decrypted_value=plaintext, selected_entry=entry)
+    padding: 0.7rem 1rem;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.inline {
+    display: inline;
+}
+
+.hidden {
+    display: none;
+}
+
+.flash {
+    background: #fef3c7;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+}
+
+.vault-entry {
+    border-top: 1px solid #e5e7eb;
+    padding: 1rem 0;
+}
+
+.error {
+    color: #b91c1c;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 0.6rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+.vault-entry {overflow-wrap: anywhere;}

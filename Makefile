@@ -26,8 +26,8 @@ help:
 	@echo "  make test-security - Test security module"
 	@echo ""
 	@echo "Code Quality:"
-	@echo "  make lint          - Run linter (flake8)"
-	@echo "  make format        - Format code with black"
+	@echo "  make lint          - Run linter (ruff)"
+	@echo "  make format        - Format code with ruff"
 	@echo "  make check         - Run all checks (lint + format check)"
 	@echo ""
 	@echo "Utility Commands:"
@@ -80,13 +80,13 @@ test-security:
 	pytest tests/test_security.py -v
 
 lint:
-	flake8 src tests --max-line-length=100 --exclude=__pycache__
+	ruff check src tests scripts
 
 format:
-	black src tests --line-length=100
+	ruff format src tests scripts
 
 format-check:
-	black src tests --line-length=100 --check
+	ruff format --check src tests scripts
 
 check: lint format-check
 	@echo "✅ All checks passed!"

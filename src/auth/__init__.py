@@ -1,3 +1,1 @@
-from src.app import create_app
-
-__all__ = ["create_app"]
+"""SecureVault module. Vault cryptography runs exclusively in the browser."""
